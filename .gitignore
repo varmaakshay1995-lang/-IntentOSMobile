@@ -1,0 +1,32 @@
+# Xcode
+*.pbxuser
+*.mode1v3
+*.mode2v3
+*.perspectivev3
+*.xcworkspace
+xcuserdata/
+*.xcodeproj
+DerivedData/
+build/
+
+# Swift
+.build/
+*.swiftdeps
+*.o
+
+# Dependencies
+Pods/
+Carthage/
+
+# OS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# IDE
+.vscode/
+*.swp
+*.swo
+
+# Logs
+*.log
