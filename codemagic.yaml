@@ -1,0 +1,60 @@
+workflows:
+  ios-build:
+    name: iOS Build & Deploy to TestFlight
+    instance_type: mac_mini_m1
+    max_build_duration: 60
+    environment:
+      ios_signing:
+        - $FCI_CERTIFICATE
+        - $FCI_CERTIFICATE_PASSWORD
+        - $FCI_PROVISIONING_PROFILE
+      vars:
+        XCODE_SCHEME: "IntentOSMobile"
+        BUNDLE_ID: "com.intentos.mobile"
+    triggering:
+      events:
+        - push
+        - pull_request
+      branch:
+        include:
+          - main
+    scripts:
+      - name: Install Swift Package dependencies
+        script: |
+          swift package resolve
+      - name: Build for Release
+        script: |
+          swift build -c release
+      - name: Run Tests
+        script: |
+          swift test
+      - name: Create Xcode project from package
+        script: |
+          swift package generate-xcodeproj
+      - name: Archive for App Store
+        script: |
+          xcodebuild archive \
+            -scheme IntentOSMobile \
+            -configuration Release \
+            -archivePath $HOME/Archives/IntentOSMobile.xcarchive \
+            -allowProvisioningUpdates
+      - name: Export IPA for TestFlight
+        script: |
+          xcodebuild -exportArchive \
+            -archivePath $HOME/Archives/IntentOSMobile.xcarchive \
+            -exportOptionsPlist $FCI_BUILD_DIR/build/exportOptions.plist \
+            -exportPath $HOME/ipa
+    artifacts:
+      - $HOME/ipa/**/*.ipa
+      - $HOME/Archives/**/*.xcarchive
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true
+        submit_to_app_store: false
+      email:
+        recipients:
+          - $BUILD_EMAIL
+        notify:
+          success: true
+          failure: true
